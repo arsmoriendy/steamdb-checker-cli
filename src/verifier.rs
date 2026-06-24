@@ -20,7 +20,7 @@ pub async fn verify_entries(state: Arc<Mutex<State>>) -> Result<()> {
 
         let state = state.clone();
         spawn(async move {
-            let status = verify_file(path.as_path(), truncated_hash.as_str())
+            let status = Box::pin(verify_file(path.as_path(), truncated_hash.as_str()))
                 .await
                 .unwrap();
 
