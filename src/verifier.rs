@@ -32,7 +32,7 @@ pub async fn verify_entries(state: Arc<Mutex<State>>) -> Result<()> {
                 Missing => &mut mtx.missing,
                 Invalid => &mut mtx.invalid,
             }
-            .push(path.into_string().unwrap());
+            .push(path.into_os_string());
 
             mtx.validation_progress += 1;
         });

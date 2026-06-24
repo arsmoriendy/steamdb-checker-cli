@@ -12,8 +12,8 @@ fn valid() {
         let entries = Entry::list(&csv).await.unwrap();
 
         let state = State {
-            csv_path: csv.to_owned().into_string().unwrap(),
-            dir_path: dir.to_owned().into_string().unwrap(),
+            csv_path: csv.to_owned().into_os_string(),
+            dir_path: dir.to_owned().into_os_string(),
             entries,
             ..Default::default()
         };

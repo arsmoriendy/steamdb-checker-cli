@@ -42,8 +42,8 @@ async fn run() -> Result<()> {
     let entries = Entry::list(csv_path).await?;
 
     let state = State {
-        csv_path: csv_path.to_owned().into_string().unwrap(),
-        dir_path: dir_path.to_owned().into_string().unwrap(),
+        csv_path: csv_path.to_owned().into_os_string(),
+        dir_path: dir_path.to_owned().into_os_string(),
         entries,
         ..Default::default()
     };
