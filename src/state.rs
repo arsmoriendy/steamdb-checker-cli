@@ -15,6 +15,7 @@ pub struct State {
     pub invalid: Vec<OsString>,
 
     pub extra: Vec<OsString>,
+    pub checked_extras: bool,
 
     pub validation_progress: usize,
 }

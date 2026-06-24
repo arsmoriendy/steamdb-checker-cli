@@ -60,9 +60,11 @@ async fn run() -> Result<()> {
             "\rValidating {}/{} files",
             validation_progress, validation_length
         );
-        if validation_progress == validation_length {
+
+        if validation_progress == validation_length && state.checked_extras {
             break;
         }
+
         drop(state);
         sleep(Duration::from_millis(100)).await;
     }
