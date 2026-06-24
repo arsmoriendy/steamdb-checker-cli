@@ -2,9 +2,11 @@ use crate::{prelude::*, state::State};
 use std::io::ErrorKind::NotFound;
 use tokio::io::AsyncReadExt;
 
-pub async fn verify_entries(dir: &Path, state: Arc<Mutex<State>>) -> Result<()> {
+pub async fn verify_entries(state: Arc<Mutex<State>>) -> Result<()> {
     let mtx = state.lock().await;
     let entries = mtx.entries.clone();
+    let dir_str = mtx.dir_path.clone();
+    let dir = Path::new(&dir_str);
     drop(mtx);
 
     for (path, truncated_hash) in entries {

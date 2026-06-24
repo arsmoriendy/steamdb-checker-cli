@@ -1,3 +1,4 @@
+mod checker;
 mod entry;
 mod find_extra;
 mod prelude;
@@ -5,10 +6,10 @@ mod state;
 mod verifier;
 
 use entry::Entry;
-use find_extra::find_extra;
 use prelude::*;
 use state::State;
-use verifier::verify_entries;
+
+use crate::checker::check;
 
 fn main() -> Result<()> {
     tokio::runtime::Builder::new_multi_thread()
@@ -42,13 +43,7 @@ async fn run() -> Result<()> {
 
     let state = Arc::new(Mutex::new(state));
 
-    verify_entries(dir_path, state.clone()).await?;
-
-    let state2 = state.clone();
-    let dir_path2 = dir_path.to_owned();
-    spawn(async move {
-        find_extra(&dir_path2, state2).await.unwrap();
-    });
+    check(state.clone()).await?;
 
     loop {
         let state = state.lock().await;
