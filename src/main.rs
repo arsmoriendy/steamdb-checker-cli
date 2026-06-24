@@ -5,6 +5,9 @@ mod prelude;
 mod state;
 mod verifier;
 
+#[cfg(test)]
+mod tests;
+
 use checker::check;
 use entry::Entry;
 use prelude::*;
@@ -15,7 +18,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-pub fn with_runtime(f: impl std::future::Future<Output = ()>) {
+fn with_runtime(f: impl std::future::Future<Output = ()>) {
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .thread_stack_size(1024 * 1024 * 4) // 4 MiB

@@ -1,6 +1,6 @@
-pub use anyhow::{Result, anyhow};
+pub use anyhow::Result;
 pub use clap::{arg, command};
-pub use serde::{Deserialize, Serialize};
+pub use serde::Deserialize;
 pub use sha1::{Digest, Sha1};
 pub use std::collections::HashMap;
 pub use std::path::{Path, PathBuf};

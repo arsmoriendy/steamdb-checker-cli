@@ -15,7 +15,7 @@ pub async fn find_extra(dir: &Path, state: Arc<Mutex<State>>) -> Result<()> {
 
         let mut mtx = state.lock().await;
         let truncated_path = path.strip_prefix(Path::new(&mtx.dir_path))?;
-        let is_extra = mtx.entries.get(truncated_path).is_none();
+        let is_extra = !mtx.entries.contains_key(truncated_path);
         if is_extra {
             let path_str = path.into_string().unwrap();
             mtx.extra.push(path_str);

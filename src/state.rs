@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::{entry::Entries, prelude::*};
+use crate::entry::Entries;
 
 #[derive(Default, Debug)]
 pub struct State {

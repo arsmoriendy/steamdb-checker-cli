@@ -71,7 +71,7 @@ pub async fn verify_file(path: &Path, truncated_hash: &str) -> Result<EntryStatu
 
     let real_hash = hex::encode(hash);
     let real_truncated_hash = format!("{}***{}", &real_hash[..10], &real_hash[30..]);
-    if truncated_hash == &real_truncated_hash {
+    if truncated_hash == real_truncated_hash {
         return Ok(EntryStatus::Valid);
     }
 
