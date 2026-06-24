@@ -1,9 +1,11 @@
 mod entry;
+mod find_extra;
 mod prelude;
 mod state;
 mod verifier;
 
 use entry::Entry;
+use find_extra::find_extra;
 use prelude::*;
 use state::State;
 use verifier::verify_entries;
@@ -31,27 +33,40 @@ async fn run() -> Result<()> {
 
     let entries = Entry::list(csv_path).await?;
 
-    let mut state = State::default();
-    state.validation_length = entries.len();
+    let state = State {
+        csv_path: csv_path.to_owned().into_string().unwrap(),
+        dir_path: dir_path.to_owned().into_string().unwrap(),
+        entries,
+        ..Default::default()
+    };
 
     let state = Arc::new(Mutex::new(state));
 
-    verify_entries(&entries, dir_path, state.clone()).await?;
+    verify_entries(dir_path, state.clone()).await?;
+
+    let state2 = state.clone();
+    let dir_path2 = dir_path.to_owned();
+    spawn(async move {
+        find_extra(&dir_path2, state2).await.unwrap();
+    });
 
     loop {
         let state = state.lock().await;
+        let validation_progress = state.validation_progress;
+        let validation_length = state.entries.len();
         print!(
             "\rValidating {}/{} files",
-            state.validation_progress, state.validation_length
+            validation_progress, validation_length
         );
-        if state.validation_progress == state.validation_length {
+        if validation_progress == validation_length {
             break;
         }
         drop(state);
         sleep(Duration::from_millis(100)).await;
     }
 
-    println!("{state:?}");
+    let state = Arc::try_unwrap(state).unwrap().into_inner();
+    println!("{state}");
 
     Ok(())
 }

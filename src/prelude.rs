@@ -5,7 +5,7 @@ pub use sha1::{Digest, Sha1};
 pub use std::collections::HashMap;
 pub use std::path::{Path, PathBuf};
 pub use std::sync::Arc;
-pub use tokio::fs::File;
+pub use tokio::fs::{File, read_dir};
 pub use tokio::sync::Mutex;
 pub use tokio::task::spawn;
 pub use tokio::time::{Duration, sleep};
