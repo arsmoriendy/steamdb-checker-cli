@@ -14,6 +14,7 @@ pub async fn verify_entries(state: Arc<Mutex<State>>) -> Result<()> {
         let Some(truncated_hash) = truncated_hash.clone() else {
             let mut mtx = state.lock().await;
             mtx.validation_progress += 1;
+            mtx.valid.push(path.into_os_string());
             drop(mtx);
             continue;
         };
