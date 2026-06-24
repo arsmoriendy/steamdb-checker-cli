@@ -5,19 +5,23 @@ mod prelude;
 mod state;
 mod verifier;
 
+use checker::check;
 use entry::Entry;
 use prelude::*;
 use state::State;
 
-use crate::checker::check;
-
 fn main() -> Result<()> {
+    with_runtime(async { run().await.unwrap() });
+    Ok(())
+}
+
+pub fn with_runtime(f: impl std::future::Future<Output = ()>) {
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
-        .thread_stack_size(4194304) // 4 MiB
-        .build()?
-        .block_on(async { run().await.unwrap() });
-    Ok(())
+        .thread_stack_size(1024 * 1024 * 4) // 4 MiB
+        .build()
+        .unwrap()
+        .block_on(f);
 }
 
 async fn run() -> Result<()> {
