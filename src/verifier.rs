@@ -13,7 +13,11 @@ pub async fn verify_entries(state: Arc<Mutex<State>>) -> Result<()> {
         let path = dir.join(path);
         let Some(truncated_hash) = truncated_hash.clone() else {
             let mut mtx = state.lock().await;
-            mtx.validation_progress += 1;
+            mtx.validation_tx
+                .as_ref()
+                .unwrap()
+                .send(path.clone().into_os_string())
+                .await?;
             mtx.valid.push(path.into_os_string());
             drop(mtx);
             continue;
@@ -24,6 +28,7 @@ pub async fn verify_entries(state: Arc<Mutex<State>>) -> Result<()> {
             let status = Box::pin(verify_file(path.as_path(), truncated_hash.as_str()))
                 .await
                 .unwrap();
+            let path_str = path.into_os_string();
 
             let mut mtx = state.lock().await;
 
@@ -33,9 +38,14 @@ pub async fn verify_entries(state: Arc<Mutex<State>>) -> Result<()> {
                 Missing => &mut mtx.missing,
                 Invalid => &mut mtx.invalid,
             }
-            .push(path.into_os_string());
+            .push(path_str.clone());
 
-            mtx.validation_progress += 1;
+            mtx.validation_tx
+                .as_ref()
+                .unwrap()
+                .send(path_str)
+                .await
+                .unwrap();
         });
     }
     Ok(())

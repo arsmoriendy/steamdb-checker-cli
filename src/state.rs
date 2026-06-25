@@ -14,10 +14,10 @@ pub struct State {
     pub missing: Vec<OsString>,
     pub invalid: Vec<OsString>,
 
-    pub extra: Vec<OsString>,
-    pub checked_extras: bool,
+    pub validation_tx: Option<mpsc::Sender<OsString>>,
 
-    pub validation_progress: usize,
+    pub extra: Vec<OsString>,
+    pub extra_tx: Option<oneshot::Sender<bool>>,
 }
 
 fn print_files(

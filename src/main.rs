@@ -40,11 +40,16 @@ async fn run() -> Result<()> {
     let dir_path = Path::new(matches.get_one::<String>("dir").unwrap());
 
     let entries = Entry::list(csv_path).await?;
+    let entries_n = entries.len();
+    let (validation_tx, mut validation_rx) = mpsc::channel::<OsString>(entries_n);
+    let (extra_tx, extra_rx) = oneshot::channel::<bool>();
 
     let state = State {
         csv_path: csv_path.to_owned().into_os_string(),
         dir_path: dir_path.to_owned().into_os_string(),
         entries,
+        validation_tx: Some(validation_tx),
+        extra_tx: Some(extra_tx),
         ..Default::default()
     };
 
@@ -52,22 +57,15 @@ async fn run() -> Result<()> {
 
     check(state.clone()).await?;
 
-    loop {
-        let state = state.lock().await;
-        let validation_progress = state.validation_progress;
-        let validation_length = state.entries.len();
-        print!(
-            "\rValidating {}/{} files",
-            validation_progress, validation_length
-        );
-
-        if validation_progress == validation_length && state.checked_extras {
+    let mut i = 0;
+    while let Some(file) = validation_rx.recv().await {
+        i += 1;
+        println!("Validated {i}/{entries_n} entries: {file:?}");
+        if i == entries_n {
             break;
         }
-
-        drop(state);
-        sleep(Duration::from_millis(100)).await;
     }
+    extra_rx.await?;
 
     let state = Arc::try_unwrap(state).unwrap().into_inner();
     println!("{state}");

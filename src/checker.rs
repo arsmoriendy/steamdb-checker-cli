@@ -13,7 +13,7 @@ pub async fn check(state: Arc<Mutex<State>>) -> Result<()> {
     spawn(async move {
         find_extra(&root, state.clone()).await.unwrap();
         let mut mtx = state.lock().await;
-        mtx.checked_extras = true;
+        mtx.extra_tx.take().unwrap().send(true).unwrap();
         drop(mtx);
     });
 

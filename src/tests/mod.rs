@@ -1,46 +1,38 @@
 use super::*;
 
-macro_rules! state {
+macro_rules! checked_state {
     (csv = $csv:expr, dir = $dir:expr) => {{
         let project_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/tests");
-        let (csv, dir) = (
+        let (csv_path, dir_path) = (
             project_dir.clone().join($csv),
             project_dir.clone().join($dir),
         );
 
-        let entries = Entry::list(&csv).await.unwrap();
+        let entries = Entry::list(&csv_path).await.unwrap();
+        let entries_n = entries.len();
+        let (validation_tx, mut validation_rx) = mpsc::channel::<OsString>(entries_n);
+        let (extra_tx, extra_rx) = oneshot::channel::<bool>();
 
-        Arc::new(Mutex::new(State {
-            csv_path: csv.to_owned().into_os_string(),
-            dir_path: dir.to_owned().into_os_string(),
+        let state = Arc::new(Mutex::new(State {
+            csv_path: csv_path.to_owned().into_os_string(),
+            dir_path: dir_path.to_owned().into_os_string(),
             entries,
+            validation_tx: Some(validation_tx),
+            extra_tx: Some(extra_tx),
             ..Default::default()
-        }))
-    }};
-}
+        }));
 
-macro_rules! check {
-    ($state:expr) => {
-        check($state.clone()).await.unwrap();
+        check(state.clone()).await.unwrap();
 
-        loop {
-            let state = $state.lock().await;
-            let validation_progress = state.validation_progress;
-            let validation_length = state.entries.len();
-            if validation_progress == validation_length {
+        let mut i = 0;
+        while let Some(file) = validation_rx.recv().await {
+            i += 1;
+            println!("Validated {i}/{entries_n} entries: {file:?}");
+            if i == entries_n {
                 break;
             }
-            drop(state);
-            sleep(Duration::from_millis(100)).await;
         }
-    };
-}
-
-macro_rules! checked_state {
-    (csv = $csv:expr, dir = $dir:expr) => {{
-        let state = state!(csv = $csv, dir = $dir);
-
-        check!(state);
+        extra_rx.await.unwrap();
 
         Arc::try_unwrap(state).unwrap().into_inner()
     }};
